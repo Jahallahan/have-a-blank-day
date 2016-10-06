@@ -16,20 +16,46 @@ class AwesomeProject extends Component {
 
   constructor(props) {
    super(props);
-   this.state = {todaysAdjective: "something"};
+   this.state = {adjective:"blank", definition: "Definition", definitionVisible: false};
 
-   this.handleButtonClick = this.handleButtonClick.bind(this)
+   this.getAdjective = this.getAdjective.bind(this)
+   this.getDefinition = this.getDefinition.bind(this)
   };
 
-  handleButtonClick() {
+  getAdjective() {
+  return fetch("https://api.wordnik.com/v4/words.json/randomWord?hasDictionaryDef=true&includePartOfSpeech=adjective&minCorpusCount=4000&maxCorpusCount=-1&minDictionaryCount=1&maxDictionaryCount=-1&minLength=5&maxLength=-1&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5")
+    .then((response) => response.json())
+    .then((responseJson) => {
+      this.setState({
+        adjective: responseJson.word,
+        definitionVisible:false
+      })
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+  };
 
-    var adjectiveList = ["wacky", "wonderful", "whimsical", "wobbly"];
+  getDefinition(){
 
-    var randomAdjective = adjectiveList[Math.round(Math.random()*(adjectiveList.length - 1))];
+    let url = "https://api.wordnik.com/v4/word.json/" + this.state.adjective + "/definitions?limit=200&includeRelated=true&useCanonical=false&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5";
 
-   this.setState({
-       todaysAdjective: randomAdjective })
-    };
+    console.log(url);
+
+    return fetch(url)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        this.setState({
+          definition: responseJson[0].text,
+          definitionVisible: true
+        })
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
+  };
+
 
   render() {
 
@@ -49,11 +75,23 @@ class AwesomeProject extends Component {
     return (
       <View style={styles.container}>
         <Text style={styles.welcome}>
-          Have a {this.state.todaysAdjective} {day}!
+          Have a {this.state.adjective} {day}!
         </Text>
-        <Text onPress={this.handleButtonClick}>
-          Go again
+
+        <Text onPress={this.getDefinition} style={styles.instructions}>
+          What does that mean?
         </Text>
+
+        {this.state.definitionVisible && <Text style={styles.definition}>
+          {this.state.definition}
+        </Text>}
+
+        <Text onPress={this.getAdjective} style={styles.instructions}>
+          Refresh
+        </Text>
+
+
+
       </View>
     );
   }
@@ -62,20 +100,33 @@ class AwesomeProject extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    backgroundColor: 'white',
+    marginTop: 100,
+    marginLeft: 30,
+
   },
   welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+    fontSize: 45,
+    fontWeight: 'bold',
+    textAlign: 'left',
+    lineHeight: 45,
+    letterSpacing: -2,
+    marginBottom: 20
   },
   instructions: {
     textAlign: 'center',
     color: '#333333',
-    marginBottom: 5,
+    marginBottom: 20,
+    color: '#0795F8'
   },
+  definition:{
+    fontStyle: 'italic',
+    fontSize: 20,
+    color: '#aaaaaa',
+    marginBottom: 20
+  }
 });
 
 AppRegistry.registerComponent('AwesomeProject', () => AwesomeProject);
